@@ -72,17 +72,15 @@ class LIRS:
           if(not self.writethrough):
             success,accrued_time = self.fallback.write(best_item)
           self.mem.add(key)
-          return True,  self.write_speed + accrued_time
-          
-
+          return True, self.write_speed + accrued_time
           
 memory = Disk(10,10)
 ram = LIRS(5,1,1,memory, True)
 
+if __name__ == "__main__":
+  for i in range(100):
+      a,b = ram.write(i)
 
-for i in range(100):
-    a,b = ram.write(i)
-
-for i in range(100):
-    for j in range(10):
-        print(ram.read(i))
+  for i in range(100):
+      for j in range(10):
+          print(ram.read(i))
