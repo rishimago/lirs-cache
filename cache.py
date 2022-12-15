@@ -32,10 +32,10 @@ class LIRS:
           self.recency_times[key] = self.num_accesses - self.last_access[key]
         self.last_access[key] = self.num_accesses
         if(key in self.mem):
-            return True, self.read_speed
+            return True, True, self.read_speed
         else:
             succ, time = self.fallback.read(key)
-            return succ,(time + self.read_speed)
+            return succ, False, (time + self.read_speed)
     def write(self,key):
         self.num_accesses += 1
         if(key in self.last_access.keys()):
@@ -49,10 +49,10 @@ class LIRS:
           accrued_time = 0
         
         if(key in self.mem):
-            return True, self.write_speed + accrued_time
+            return True, True, self.write_speed + accrued_time
         elif(len(self.mem) < self.size):
             self.mem.add(key)
-            return True, self.write_speed + accrued_time
+            return True, False, self.write_speed + accrued_time
         else:
           #find worst key
           best_item = None
@@ -74,14 +74,14 @@ class LIRS:
           if(not self.writethrough):
             success,accrued_time = self.fallback.write(best_item)
           self.mem.add(key)
-          return True, self.write_speed + accrued_time
+          return True, False, self.write_speed + accrued_time
           
 memory = Disk(10,10)
 ram = LIRS(5,1,1,memory, True)
 
 if __name__ == "__main__":
   for i in range(100):
-      a,b = ram.write(i)
+      a,b,c = ram.write(i)
 
   for i in range(100):
       for j in range(10):
