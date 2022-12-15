@@ -67,7 +67,7 @@ class LIRS:
               best_lir = lir
               best_tiebreaker = tiebreaker
               best_item = item 
-            elif((lir == best_lir) and (tiebreaker > best_tiebreaker)):
+            elif((lir == best_lir) and (tiebreaker < best_tiebreaker)):
               best_tiebreaker = tiebreaker 
               best_item = item 
           self.mem.remove(best_item)
