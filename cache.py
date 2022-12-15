@@ -24,10 +24,10 @@ class LIRS:
         self.mem = PriorityQueue(self.size)
         self.recency_times = {}
         self.last_access = {}
-
+        self.writethrough = writethrough
         self.num_accesses = 0
     def read(self,key):
-      self.num_accesses += 1
+        self.num_accesses += 1
         if(key in self.last_access.keys()):
           self.recency_times[key] = self.num_accesses - self.last_access[key]
         self.last_access[key] = self.num_accesses
@@ -37,9 +37,14 @@ class LIRS:
             succ, time = self.fallback.read(key)
             return succ,(time + self.read_speed)
     def write(self,key):
-        if(write_back
+        self.num_accesses += 1
+        if(key in self.last_access.keys()):
+          self.recency_times[key] = self.num_accesses - self.last_access[key]
+        self.last_access[key] = self.num_accesses
+        if(self.writethrough):
+          success, accrued_time = fallback.write(key)
+        else:
+          accrued_time = 0
         
         if(key in self.mem):
-            last,second_to_last = self.access_times[key]
-            self.access_times[key] = (self.num_accesses,last)
-            return True, self.write_speed 
+            return True, self.write_speed + accrued_time
