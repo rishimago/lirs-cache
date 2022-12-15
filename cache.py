@@ -4,15 +4,15 @@ class Disk:
     def __init__ (self,read_speed,write_speed):
         self.read_speed = read_speed
         self.write_speed = write_speed
-        self.mem = set()
+        self.mem = {}
     def read(self,key):
-      if(key in self.mem):
-        return True,self.read_speed
+      if(key in self.mem.keys()):
+        return True, self.read_speed
       else:
-          return False,self.read_speed
-    def write(self,key):
-      self.mem.add(key)
-      return True,self.write_speed
+          return False, self.read_speed
+    def write(self,key,size):
+      self.mem[key] = size
+      return True, self.write_speed
 
 
 class LIRS:
@@ -21,7 +21,8 @@ class LIRS:
         self.read_speed = read_speed
         self.write_speed = write_speed
         self.fallback = fallback
-        self.mem = set()
+        self.mem = {}
+        self.bytesStored = 0
         self.recency_times = {}
         self.last_access = {}
         self.writethrough = writethrough
@@ -31,12 +32,12 @@ class LIRS:
         if(key in self.last_access.keys()):
           self.recency_times[key] = self.num_accesses - self.last_access[key]
         self.last_access[key] = self.num_accesses
-        if(key in self.mem):
+        if(key in self.mem.keys()):
             return True, True, self.read_speed
         else:
             succ, time = self.fallback.read(key)
             return succ, False, (time + self.read_speed)
-    def write(self,key):
+    def write(self,key,size):
         self.num_accesses += 1
         if(key in self.last_access.keys()):
           self.recency_times[key] = self.num_accesses - self.last_access[key]
@@ -44,44 +45,57 @@ class LIRS:
           self.recency_times[key] = infinity
         self.last_access[key] = self.num_accesses
         if(self.writethrough):
-          success, accrued_time = self.fallback.write(key)
+          success, accrued_time = self.fallback.write(key, size)
         else:
           accrued_time = 0
         
-        if(key in self.mem):
+        if(key in self.mem.keys()):
             return True, True, self.write_speed + accrued_time
-        elif(len(self.mem) < self.size):
-            self.mem.add(key)
-            return True, False, self.write_speed + accrued_time
         else:
-          #find worst key
-          best_item = None
-          best_lir = infinity
-          best_tiebreaker = infinity
-          for item in self.mem:
-            last = self.last_access[item]
-            recency = self.recency_times[item]
-            lir = max(recency, self.num_accesses - last)
-            tiebreaker = min(recency, self.num_accesses - last)
-            if(lir < best_lir):
-              best_lir = lir
-              best_tiebreaker = tiebreaker
-              best_item = item 
-            elif((lir == best_lir) and (tiebreaker < best_tiebreaker)):
-              best_tiebreaker = tiebreaker 
-              best_item = item 
-          self.mem.remove(best_item)
-          if(not self.writethrough):
-            success,accrued_time = self.fallback.write(best_item)
-          self.mem.add(key)
+          while (self.bytesStored + size >= self.size):
+            if self.bytesStored == 0:
+              return False, False, self.write_speed + accrued_time
+
+            #find worst key
+            best_item = None
+            best_lir = infinity
+            best_tiebreaker = infinity
+
+            for item, item_size in self.mem.items():
+              last = self.last_access[item]
+              recency = self.recency_times[item]
+              lir = max(recency, self.num_accesses - last)
+              tiebreaker = min(recency, self.num_accesses - last)
+              if(lir < best_lir):
+                best_lir = lir
+                best_tiebreaker = tiebreaker
+                best_item = item 
+                best_size = item_size
+              elif((lir == best_lir) and (tiebreaker < best_tiebreaker)):
+                best_tiebreaker = tiebreaker 
+                best_item = item 
+                best_size = item_size
+
+            # print(self.mem.items())
+            # print(best_item)
+            # print(self.bytesStored)
+            # print(best_size)
+
+            self.mem.pop(best_item)
+            self.bytesStored -= best_size
+            if(not self.writethrough):
+              success,accrued_time = self.fallback.write(best_item, best_size)
+
+          self.mem[key] = size
+          self.bytesStored += size
           return True, False, self.write_speed + accrued_time
           
 memory = Disk(10,10)
-ram = LIRS(5,1,1,memory, True)
+ram = LIRS(5,1,1,memory,True)
 
 if __name__ == "__main__":
   for i in range(100):
-      a,b,c = ram.write(i)
+      a,b,c = ram.write(i, 1)
 
   for i in range(100):
       for j in range(10):
