@@ -9,7 +9,7 @@ class Disk:
       if(key in self.mem):
         return True,self.read_speed
       else:
-          return False,0
+          return False,self.read_speed
     def write(self,key):
       self.mem.add(key)
       return True,self.write_speed
