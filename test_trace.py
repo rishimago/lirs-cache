@@ -11,13 +11,14 @@ if __name__ == "__main__":
 	cache_size = 50000
 	cache_read_speed = 1
 	cache_write_speed = 1
-	cache_writethrough = False
+	cache_writethrough = True
+	adds_reads_to_cache = True
 
 	percent_reads = 50
 	percent_writes = 100 - percent_reads
 
 	memory = Disk(disk_read_speed, disk_write_speed)
-	ram = LIRS(cache_size, cache_read_speed, cache_write_speed, memory, cache_writethrough)
+	ram = LIRS(cache_size, cache_read_speed, cache_write_speed, memory, cache_writethrough, adds_reads_to_cache)
 
 	random.seed(42)
 
