@@ -56,17 +56,19 @@ class LIRS:
         else:
           #find worst key
           best_item = None
-          best_last = -1*infinity
-          best_recency = infinity
+          best_lir = infinity
+          best_tiebreaker = infinity
           for item in self.mem:
             last = self.last_access[item]
             recency = self.recency_times[item]
-            if(recency < best_recency):
-              best_last = last 
-              best_recency = recency
+            lir = max(recency, self.num_accesses - last)
+            tiebreaker = min(recency, self.num_accesses - last)
+            if(lir < best_lir):
+              best_lir = lir
+              best_tiebreaker = tiebreaker
               best_item = item 
-            elif((recency == best_recency)and (last > best_last)):
-              best_last = last 
+            elif((lir == best_lir) and (tiebreaker > best_tiebreaker)):
+              best_tiebreaker = tiebreaker 
               best_item = item 
           self.mem.remove(best_item)
           if(not self.writethrough):
