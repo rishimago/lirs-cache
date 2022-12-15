@@ -26,8 +26,10 @@ if __name__ == "__main__":
 		read_times = []
 		write_times = []
 
-		hits = 0
-		misses = 0
+		read_hits = 0
+		read_misses = 0
+		write_hits = 0
+		write_misses = 0
 
 		lines = trace_file.readlines()
 
@@ -41,46 +43,35 @@ if __name__ == "__main__":
 			is_read = random.choices([True, False], weights = [percent_reads, percent_writes])[0]
 
 			if is_read:
-				success, time = ram.read(obj_id)
+				success, is_hit, time = ram.read(obj_id)
 				read_times.append(time)
 
-				# if time == disk_read_speed + cache_read_speed:
-				# 	hits += 1
+				if is_hit: read_hits += 1
+				else: read_misses +=1
 			else:
-				success, time = ram.write(obj_id)
+				success, is_hit, time = ram.write(obj_id)
 				write_times.append(time)
 
-			successes.append(success)
-			i+=1
-
-		i = 0
-		for line in lines:
-			if i == 50000:
-				break
-
-			timestamp, obj_id, obj_size = line.split(",")
-
-			is_read = random.choices([True, False], weights = [percent_reads, percent_writes])[0]
-
-			if is_read:
-				success, time = ram.read(obj_id)
-				read_times.append(time)
-
-				# if time == disk_read_speed + cache_read_speed:
-				# 	hits += 1
-			else:
-				success, time = ram.write(obj_id)
-				write_times.append(time)
+				if is_hit: write_hits += 1
+				else: write_misses +=1
 
 			successes.append(success)
 			i+=1
 
 	count = len(successes)
-
 	successes = np.array(successes)
+	hits = read_hits + write_hits
+	misses = read_misses + write_misses
+
 	print("Num Requests: ", count)
-	print("% Reads: ", len(read_times) / float(count))
-	print("% Writes: ", len(write_times) / float(count))
-	print("Success rate: ", len(successes[successes]) / float(count))
-	print("Read times – Mean: ", np.average(read_times), "Stdev: ", np.std(read_times))
-	print("Write times – Mean: ", np.average(write_times), "Stdev: ", np.std(write_times))
+	print("%% Reads: %0.2f" % (100 * len(read_times) / count))
+	print("%% Writes: %0.2f" % (100 * len(write_times) / count))
+	print("%% Read Hits: %0.2f" % (100 * read_hits / (read_hits + read_misses)))
+	print("%% Read Misses: %0.2f" % (100 * read_misses / (read_hits + read_misses)))
+	print("%% Write Hits: %0.2f" % (100 * write_hits / (write_hits + write_misses)))
+	print("%% Write Misses: %0.2f" % (100 * write_misses / (write_hits + write_misses)))
+	print("%% Hits: %0.2f" % (100 * hits / (hits + misses)))
+	print("%% Misses: %0.2f" % (100 * misses / (hits + misses)))
+	print("Success rate: %0.2f" % (100 * len(successes[successes]) / count))
+	print("Read times – Mean: %0.2f Stdev: %0.2f" % (np.average(read_times), np.std(read_times)))
+	print("Write times – Mean: %0.2f Stdev: %0.2f" % (np.average(write_times), np.std(write_times)))
