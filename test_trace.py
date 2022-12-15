@@ -49,4 +49,4 @@ if __name__ == "__main__":
 	print("Num Writes: ", len(write_times))
 	print("Success rate: ", len(successes[successes]) / float(count))
 	print("Average read time: ", np.average(read_times))
-	print("Average write time: ", np.average(read_times))
+	print("Average write time: ", np.average(write_times))
