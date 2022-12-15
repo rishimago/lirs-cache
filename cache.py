@@ -22,9 +22,15 @@ class LIRS:
         self.write_speed = write_speed
         self.fallback = fallback
         self.mem = PriorityQueue(self.size)
-        self.access_times = {}
+        self.recency_times = {}
+        self.last_access = {}
+
         self.num_accesses = 0
     def read(self,key):
+      self.num_accesses += 1
+        if(key in self.last_access.keys()):
+          self.recency_times[key] = self.num_accesses - self.last_access[key]
+        self.last_access[key] = self.num_accesses
         if(key in self.mem):
             return True, self.read_speed
         else:
