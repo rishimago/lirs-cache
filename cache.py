@@ -35,7 +35,6 @@ class FIFO:
         succ, size, time = self.fallback.read(key)
     return succ, False, (time + self.read_speed)
 
-
   def write(self,key,size):
       self.num_accesses += 1
       self.last_access[key] = self.num_accesses

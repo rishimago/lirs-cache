@@ -3,23 +3,7 @@ from cache import *
 import numpy as np
 import random
 
-if __name__ == "__main__":
-	filepath = sys.argv[1]
-
-	disk_read_speed = 10
-	disk_write_speed = 10
-	cache_size = 50000
-	cache_read_speed = 1
-	cache_write_speed = 1
-	cache_writethrough = True
-	adds_reads_to_cache = True
-
-	percent_reads = 50
-	percent_writes = 100 - percent_reads
-
-	memory = Disk(disk_read_speed, disk_write_speed)
-	ram = LIRS(cache_size, cache_read_speed, cache_write_speed, memory, cache_writethrough, adds_reads_to_cache)
-
+def run_trial(ram):
 	random.seed(42)
 
 	with open(filepath, "r") as trace_file:
@@ -32,13 +16,9 @@ if __name__ == "__main__":
 		write_hits = 0
 		write_misses = 0
 
-		lines = trace_file.readlines()
+		lines = trace_file.readlines()[:50000]
 
-		i = 0
 		for line in lines:
-			if i == 50000:
-				break
-
 			timestamp, obj_id, obj_size = line.split(",")
 
 			is_read = random.choices([True, False], weights = [percent_reads, percent_writes])[0]
@@ -57,7 +37,6 @@ if __name__ == "__main__":
 				else: write_misses +=1
 
 			successes.append(success)
-			i+=1
 
 	count = len(successes)
 	successes = np.array(successes)
@@ -76,3 +55,29 @@ if __name__ == "__main__":
 	print("Success rate: %0.2f%%" % (100 * len(successes[successes]) / count))
 	print("Read times – Mean: %0.2f, Stdev: %0.2f" % (np.average(read_times), np.std(read_times)))
 	print("Write times – Mean: %0.2f, Stdev: %0.2f" % (np.average(write_times), np.std(write_times)))
+
+if __name__ == "__main__":
+	filepath = sys.argv[1]
+
+	disk_read_speed = 10
+	disk_write_speed = 10
+	cache_size = 50000
+	cache_read_speed = 1
+	cache_write_speed = 1
+	cache_writethrough = True
+	adds_reads_to_cache = True
+
+	percent_reads = 50
+	percent_writes = 100 - percent_reads
+
+	memory = Disk(disk_read_speed, disk_write_speed)
+	lirs_ram = LIRS(cache_size, cache_read_speed, cache_write_speed, memory, cache_writethrough, adds_reads_to_cache)
+	fifo_ram = FIFO(cache_size, cache_read_speed, cache_write_speed, memory, cache_writethrough, adds_reads_to_cache)
+	lru_ram = LRU(cache_size, cache_read_speed, cache_write_speed, memory, cache_writethrough, adds_reads_to_cache)
+
+	print("LIRS:")
+	run_trial(lirs_ram)
+	print("FIFO:")
+	run_trial(fifo_ram)
+	print("LRU:")
+	run_trial(lru_ram)
