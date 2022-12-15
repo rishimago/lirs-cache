@@ -26,23 +26,8 @@ class LRU:
         self.writethrough = writethrough
         self.num_accesses = 0
         self.add_reads_to_cache = add_reads_to_cache
-    
-    
 
-class LIRS:
-    def __init__(self,size,read_speed,write_speed,fallback,writethrough,add_reads_to_cache):
-        self.maxBytes = size
-        self.read_speed = read_speed
-        self.write_speed = write_speed
-        self.fallback = fallback
-        self.mem = {}
-        self.bytesStored = 0
-        self.recency_times = {}
-        self.last_access = {}
-        self.writethrough = writethrough
-        self.num_accesses = 0
-        self.add_reads_to_cache = add_reads_to_cache
-      def read(self,key):
+    def read(self,key):
         self.num_accesses += 1
         self.last_access[key] = self.num_accesses
         if(key in self.mem.keys()):
@@ -114,8 +99,22 @@ class LIRS:
         self.mem[key] = size
         self.bytesStored += size
         return True, False, self.write_speed + accrued_time
-      
+    
+    
 
+class LIRS:
+    def __init__(self,size,read_speed,write_speed,fallback,writethrough,add_reads_to_cache):
+        self.maxBytes = size
+        self.read_speed = read_speed
+        self.write_speed = write_speed
+        self.fallback = fallback
+        self.mem = {}
+        self.bytesStored = 0
+        self.recency_times = {}
+        self.last_access = {}
+        self.writethrough = writethrough
+        self.num_accesses = 0
+        self.add_reads_to_cache = add_reads_to_cache
     def read(self,key):
         self.num_accesses += 1
         if(key in self.last_access.keys()):
