@@ -57,7 +57,7 @@ class FIFO:
 
 
           for item, item_size in self.mem.items():
-            last = self.last_access[item]
+            last = self.last_access.get(item,-1*infinity)
             if(last < least_recent):
               least_recent = last
               best_item = item 
@@ -105,7 +105,7 @@ class LRU:
             least_recent = infinity
 
             for item, item_size in self.mem.items():
-              last = self.last_access[item]
+              last = self.last_access.get(item,-1*infinity)
               if(last < least_recent):
                 least_recent = last
                 best_item = item 
@@ -144,7 +144,7 @@ class LRU:
 
 
           for item, item_size in self.mem.items():
-            last = self.last_access[item]
+            last = self.last_access.get(item,-1*infinity)
             if(last < least_recent):
               least_recent = last
               best_item = item 
@@ -200,8 +200,8 @@ class LIRS:
             best_tiebreaker = infinity
 
             for item, item_size in self.mem.items():
-              last = self.last_access[item]
-              recency = self.recency_times[item]
+              last = self.last_access.get(item,-1*infinity)
+              recency = self.recency_times.get(item,infinity)
               lir = max(recency, self.num_accesses - last)
               tiebreaker = min(recency, self.num_accesses - last)
               if(lir < best_lir):
@@ -257,8 +257,8 @@ class LIRS:
             best_tiebreaker = infinity
 
             for item, item_size in self.mem.items():
-              last = self.last_access[item]
-              recency = self.recency_times[item]
+              last = self.last_access.get(item,-1*infinity)
+              recency = self.recency_times.get(item,infinity)
               lir = max(recency, self.num_accesses - last)
               tiebreaker = min(recency, self.num_accesses - last)
               if(lir < best_lir):
