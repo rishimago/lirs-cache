@@ -24,6 +24,7 @@ class FIFO:
     self.mem = {}
     self.bytesStored = 0
     self.recency_times = {}
+    self.last_access = {}
     self.writethrough = writethrough
     self.num_accesses = 0
     self.add_reads_to_cache = add_reads_to_cache
@@ -81,6 +82,7 @@ class LRU:
     self.mem = {}
     self.bytesStored = 0
     self.recency_times = {}
+    self.last_access = {}
     self.writethrough = writethrough
     self.num_accesses = 0
     self.add_reads_to_cache = add_reads_to_cache
