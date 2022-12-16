@@ -44,11 +44,11 @@ class FIFO:
         accrued_time = 0
       
       if(key in self.mem.keys()):
+          self.last_access[key] = self.num_accesses
           return True, True, self.write_speed + accrued_time
       else:
         while (self.bytesStored + size >= self.maxBytes):
           if self.bytesStored == 0:
-            self.last_access[key] = self.num_accesses
             return False, False, self.write_speed + accrued_time
 
           #find worst key
@@ -91,6 +91,7 @@ class LRU:
   def read(self,key):
       self.num_accesses += 1
       if(key in self.mem.keys()):
+        self.last_access[key] = self.num_accesses
         return True, True, self.read_speed
       else:
         succ, size, time = self.fallback.read(key)
@@ -98,6 +99,7 @@ class LRU:
         if succ and self.add_reads_to_cache:
           while (self.bytesStored + size >= self.maxBytes):
             if self.bytesStored == 0:
+              self.last_access[key] = self.num_accesses
               return True, False, (time + self.read_speed)
 
             #find worst key
@@ -120,6 +122,7 @@ class LRU:
           self.mem[key] = size
           self.bytesStored += size
         
+        self.last_access[key] = self.num_accesses
         return succ, False, (time + self.read_speed)
 
 
@@ -131,6 +134,7 @@ class LRU:
         accrued_time = 0
       
       if(key in self.mem.keys()):
+          self.last_access[key] = self.num_accesses
           return True, True, self.write_speed + accrued_time
       else:
         while (self.bytesStored + size >= self.maxBytes):
