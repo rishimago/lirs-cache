@@ -38,7 +38,6 @@ class FIFO:
 
   def write(self,key,size):
       self.num_accesses += 1
-      self.last_access[key] = self.num_accesses
       if(self.writethrough):
         success, accrued_time = self.fallback.write(key, size)
       else:
@@ -49,6 +48,7 @@ class FIFO:
       else:
         while (self.bytesStored + size >= self.maxBytes):
           if self.bytesStored == 0:
+            self.last_access[key] = self.num_accesses
             return False, False, self.write_speed + accrued_time
 
           #find worst key
@@ -71,6 +71,7 @@ class FIFO:
 
         self.mem[key] = size
         self.bytesStored += size
+        self.last_access[key] = self.num_accesses
         return True, False, self.write_speed + accrued_time
 
 class LRU:
@@ -89,7 +90,6 @@ class LRU:
 
   def read(self,key):
       self.num_accesses += 1
-      self.last_access[key] = self.num_accesses
       if(key in self.mem.keys()):
         return True, True, self.read_speed
       else:
@@ -119,13 +119,12 @@ class LRU:
 
           self.mem[key] = size
           self.bytesStored += size
-
+        
         return succ, False, (time + self.read_speed)
 
 
   def write(self,key,size):
       self.num_accesses += 1
-      self.last_access[key] = self.num_accesses
       if(self.writethrough):
         success, accrued_time = self.fallback.write(key, size)
       else:
@@ -136,6 +135,7 @@ class LRU:
       else:
         while (self.bytesStored + size >= self.maxBytes):
           if self.bytesStored == 0:
+            self.last_access[key] = self.num_accesses
             return False, False, self.write_speed + accrued_time
 
           #find worst key
@@ -158,6 +158,7 @@ class LRU:
 
         self.mem[key] = size
         self.bytesStored += size
+        self.last_access[key] = self.num_accesses
         return True, False, self.write_speed + accrued_time
     
     
@@ -177,10 +178,10 @@ class LIRS:
       self.add_reads_to_cache = add_reads_to_cache
   def read(self,key):
       self.num_accesses += 1
-      if(key in self.last_access.keys()):
-        self.recency_times[key] = self.num_accesses - self.last_access[key]
-      self.last_access[key] = self.num_accesses
       if(key in self.mem.keys()):
+          if(key in self.last_access.keys()):
+            self.recency_times[key] = self.num_accesses - self.last_access[key]
+          self.last_access[key] = self.num_accesses
           return True, True, self.read_speed
       else:
         succ, size, time = self.fallback.read(key)
@@ -188,6 +189,9 @@ class LIRS:
         if succ and self.add_reads_to_cache:
           while (self.bytesStored + size >= self.maxBytes):
             if self.bytesStored == 0:
+              if(key in self.last_access.keys()):
+                self.recency_times[key] = self.num_accesses - self.last_access[key]
+              self.last_access[key] = self.num_accesses
               return True, False, (time + self.read_speed)
 
             #find worst key
@@ -219,24 +223,32 @@ class LIRS:
           self.mem[key] = size
           self.bytesStored += size
 
+        if(key in self.last_access.keys()):
+          self.recency_times[key] = self.num_accesses - self.last_access[key]
+        self.last_access[key] = self.num_accesses
         return succ, False, (time + self.read_speed)
   def write(self,key,size):
         self.num_accesses += 1
-        if(key in self.last_access.keys()):
-          self.recency_times[key] = self.num_accesses - self.last_access[key]
-        else:
-          self.recency_times[key] = infinity
-        self.last_access[key] = self.num_accesses
         if(self.writethrough):
           success, accrued_time = self.fallback.write(key, size)
         else:
           accrued_time = 0
         
         if(key in self.mem.keys()):
-            return True, True, self.write_speed + accrued_time
+          if(key in self.last_access.keys()):
+            self.recency_times[key] = self.num_accesses - self.last_access[key]
+          else:
+            self.recency_times[key] = infinity
+          self.last_access[key] = self.num_accesses
+          return True, True, self.write_speed + accrued_time
         else:
           while (self.bytesStored + size >= self.maxBytes):
             if self.bytesStored == 0:
+              if(key in self.last_access.keys()):
+                self.recency_times[key] = self.num_accesses - self.last_access[key]
+              else:
+                self.recency_times[key] = infinity
+              self.last_access[key] = self.num_accesses
               return False, False, self.write_speed + accrued_time
 
             #find worst key
@@ -267,6 +279,11 @@ class LIRS:
 
           self.mem[key] = size
           self.bytesStored += size
+          if(key in self.last_access.keys()):
+            self.recency_times[key] = self.num_accesses - self.last_access[key]
+          else:
+            self.recency_times[key] = infinity
+          self.last_access[key] = self.num_accesses
           return True, False, self.write_speed + accrued_time
           
 memory = Disk(10,10)
