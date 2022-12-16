@@ -2,6 +2,7 @@ import sys
 from cache import *
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 def run_trial(ram, state):
   random.setstate(state)
@@ -16,17 +17,19 @@ def run_trial(ram, state):
     write_hits = 0
     write_misses = 0
 
-    lines = trace_file.readlines()[:50000]
+    lines = trace_file.readlines()[:100000]
 
-    id_set = set()
+    ids = {}
     sizes = []
 
     for line in lines:
       timestamp, obj_id, obj_size = line.split(",")
       obj_size = int(obj_size)
 
-      if obj_id not in id_set:
-        id_set.add(obj_id)
+      if obj_id in ids.keys():
+        ids[obj_id] += 1
+      else:
+        ids[obj_id] = 1
         sizes.append(obj_size)
 
       is_read = random.choices([True, False], weights = [percent_reads, percent_writes])[0]
@@ -52,7 +55,7 @@ def run_trial(ram, state):
   misses = read_misses + write_misses
   times = np.append(read_times, write_times)
 
-  num_items = len(id_set)
+  num_items = len(ids.keys())
   sizes = np.array(sizes)
 
   print("Num Requests: ", count)
@@ -71,16 +74,20 @@ def run_trial(ram, state):
   print("Write times – Mean: %0.2f, Stdev: %0.2f" % (np.average(write_times), np.std(write_times)))
   print("Overall times – Mean: %0.2f, Stdev: %0.2f" % (np.average(times), np.std(times)))
 
+  values = np.array(list(ids.values()))
+  
+  return values
+
+
 if __name__ == "__main__":
   filepath = sys.argv[1]
 
   disk_read_speed = 10
   disk_write_speed = 10
-  # cache_size = 50000
   cache_size = int(sys.argv[2])
   cache_read_speed = 1
   cache_write_speed = 1
-  cache_writethrough = False
+  cache_writethrough = True
   adds_reads_to_cache = True
 
   percent_reads = 50
@@ -99,5 +106,12 @@ if __name__ == "__main__":
   print("\nFIFO:")
   run_trial(fifo_ram, rand)
   print("\nLRU:")
-  run_trial(lru_ram, rand)
+  values = run_trial(lru_ram, rand)
+  # print(values)
+  # print(np.mean(values))
+  # print(np.std(values))
+  # print(np.min(values))
+  # print(np.max(values))
+  plt.hist(values, bins = 200)
+  plt.show()
   print("\nDone!")
